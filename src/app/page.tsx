@@ -5,6 +5,7 @@ import { ImageUploader } from '@/components/ImageUploader';
 import { ConfigPanel } from '@/components/ConfigPanel';
 import { AsciiPreview } from '@/components/AsciiPreview';
 import { ExportButtons } from '@/components/ExportButtons';
+import { CopyButtons } from '@/components/CopyButtons';
 
 export default function Home() {
   const {
@@ -89,8 +90,16 @@ export default function Home() {
               />
             </section>
 
-            {/* Export Section */}
+            {/* Copy Section */}
             <section className="bg-card rounded-xl border border-border p-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <CopyButtons 
+                result={result}
+                disabled={isProcessing}
+              />
+            </section>
+
+            {/* Export Section */}
+            <section className="bg-card rounded-xl border border-border p-4 animate-fade-in" style={{ animationDelay: '150ms' }}>
               <ExportButtons 
                 result={result}
                 disabled={isProcessing}
@@ -99,7 +108,7 @@ export default function Home() {
           </aside>
 
           {/* Right Side - Preview */}
-          <div className="flex-1 min-h-[500px] lg:min-h-[calc(100vh-180px)] flex flex-col animate-fade-in" style={{ animationDelay: '150ms' }}>
+          <div className="flex-1 min-h-[500px] lg:min-h-[calc(100vh-180px)] flex flex-col animate-fade-in" style={{ animationDelay: '200ms' }}>
             {error && (
               <div className="mb-4 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
