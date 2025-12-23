@@ -120,12 +120,12 @@ export function ImageUploader({ onImageSelect, currentImage, onClear }: ImageUpl
           {isDragOver ? 'Drop your image here' : 'Drag & drop an image'}
         </p>
         <p className="text-muted text-sm">
-          or click to browse
+          or click to browse / paste from clipboard
         </p>
       </div>
       
       <p className="text-muted/60 text-xs">
-        Supports JPG, PNG, GIF, WebP
+        Supports JPG, PNG, GIF, WebP • Ctrl+V to paste
       </p>
       
       <input
