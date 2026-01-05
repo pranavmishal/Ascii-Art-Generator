@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useAsciiConverter } from '@/hooks/useAsciiConverter';
 import { ImageUploader } from '@/components/ImageUploader';
 import { ConfigPanel } from '@/components/ConfigPanel';
@@ -20,27 +19,6 @@ export default function Home() {
     updateConfig,
     resetConfig,
   } = useAsciiConverter();
-
-  // Global paste event listener for clipboard images
-  useEffect(() => {
-    const handlePaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
-      for (const item of items) {
-        if (item.type.startsWith('image/')) {
-          const file = item.getAsFile();
-          if (file) {
-            setImage(file);
-            break;
-          }
-        }
-      }
-    };
-
-    document.addEventListener('paste', handlePaste);
-    return () => document.removeEventListener('paste', handlePaste);
-  }, [setImage]);
 
   return (
     <div className="min-h-screen grid-pattern">
