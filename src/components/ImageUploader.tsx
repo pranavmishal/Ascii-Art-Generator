@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface ImageUploaderProps {
   onImageSelect: (file: File) => void;
@@ -10,7 +12,46 @@ interface ImageUploaderProps {
 
 export function ImageUploader({ onImageSelect, currentImage, onClear }: ImageUploaderProps) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showPasteHint, setShowPasteHint] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Handle paste from clipboard
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            onImageSelect(file);
+            setShowPasteHint(false);
+          }
+          break;
+        }
+      }
+    };
+    
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [onImageSelect]);
+  
+  // Show paste hint on keyboard shortcut detection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+        if (!currentImage) {
+          setShowPasteHint(true);
+          setTimeout(() => setShowPasteHint(false), 1500);
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [currentImage]);
   
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -48,27 +89,21 @@ export function ImageUploader({ onImageSelect, currentImage, onClear }: ImageUpl
   
   if (currentImage) {
     return (
-      <div className="relative group animate-fade-in">
-        <div className="relative rounded-xl overflow-hidden bg-card border border-border">
+      <div className="space-y-2">
+        <div className="relative rounded-md overflow-hidden border bg-muted">
           <img 
             src={currentImage} 
             alt="Uploaded" 
-            className="w-full h-48 object-contain bg-black/20"
+            className="w-full h-40 object-contain"
           />
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-            <button
-              onClick={handleClick}
-              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Replace
-            </button>
-            <button
-              onClick={onClear}
-              className="px-4 py-2 bg-red-500/80 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Remove
-            </button>
-          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleClick} className="flex-1">
+            Replace
+          </Button>
+          <Button variant="outline" size="sm" onClick={onClear} className="flex-1">
+            Remove
+          </Button>
         </div>
         <input
           ref={fileInputRef}
@@ -87,47 +122,26 @@ export function ImageUploader({ onImageSelect, currentImage, onClear }: ImageUpl
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`
-        drop-zone rounded-xl p-8 cursor-pointer
-        flex flex-col items-center justify-center gap-4
-        min-h-[200px] transition-all duration-200
-        ${isDragOver ? 'drag-over scale-[1.02]' : 'hover:border-primary/50'}
-      `}
+      className={cn(
+        "flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed p-6 cursor-pointer transition-all",
+        isDragOver && "border-primary bg-muted",
+        showPasteHint && "border-primary bg-primary/5",
+        !isDragOver && !showPasteHint && "border-muted-foreground/25 hover:border-muted-foreground/50"
+      )}
     >
-      {/* Upload Icon */}
-      <div className={`
-        w-16 h-16 rounded-full flex items-center justify-center
-        transition-colors duration-200
-        ${isDragOver ? 'bg-accent/20' : 'bg-primary/10'}
-      `}>
-        <svg 
-          className={`w-8 h-8 transition-colors ${isDragOver ? 'text-accent' : 'text-primary'}`}
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
-          />
+      <div className="rounded-full bg-muted p-3">
+        <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
         </svg>
       </div>
-      
       <div className="text-center">
-        <p className="text-foreground font-medium mb-1">
-          {isDragOver ? 'Drop your image here' : 'Drag & drop an image'}
+        <p className="text-sm font-medium">
+          {showPasteHint ? 'Pasting...' : 'Drop, paste, or click to browse'}
         </p>
-        <p className="text-muted text-sm">
-          or click to browse
+        <p className="text-xs text-muted-foreground mt-1">
+          PNG, JPG, GIF, WebP • <kbd className="px-1 py-0.5 rounded bg-muted text-[10px] font-mono">⌘V</kbd> to paste
         </p>
       </div>
-      
-      <p className="text-muted/60 text-xs">
-        Supports JPG, PNG, GIF, WebP
-      </p>
-      
       <input
         ref={fileInputRef}
         type="file"
@@ -138,4 +152,3 @@ export function ImageUploader({ onImageSelect, currentImage, onClear }: ImageUpl
     </div>
   );
 }
-
